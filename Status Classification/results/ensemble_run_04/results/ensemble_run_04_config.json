@@ -1,0 +1,68 @@
+{
+  "activation": "swish",
+  "add_noise": true,
+  "batch_size": 64,
+  "channels": [
+    64,
+    128,
+    256,
+    512,
+    512
+  ],
+  "data_path": "../Data/Option 1",
+  "dense_hidden_min": 256,
+  "dense_hidden_ratio": 1.0,
+  "dilations": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "dropout": 0.35,
+  "early_stopping_metric": "val_loss",
+  "early_stopping_patience": 50,
+  "experiment_name": "ensemble_run_04",
+  "fixed_class_distribution": {
+    "Normal": 220,
+    "NPT": 66,
+    "OD": 75
+  },
+  "include_derivatives": false,
+  "kernel_size": 7,
+  "learning_rate": 0.0005,
+  "logs_dir": "results\\ensemble_run_04\\logs",
+  "mask_ratio": 0.1,
+  "max_series_length": 10000,
+  "model_dir": "results\\ensemble_run_04\\models",
+  "noise_std": 0.1,
+  "normalize": true,
+  "num_epochs": 300,
+  "results_dir": "results\\ensemble_run_04\\results",
+  "scheduler_factor": 0.5,
+  "scheduler_patience": 5,
+  "seed": 46,
+  "status_mapping": {
+    "Normal": 0,
+    "NPT": 1,
+    "OD": 2
+  },
+  "strides": [
+    2,
+    2,
+    2,
+    2,
+    1
+  ],
+  "test_path": "../Data/Option 1/Test",
+  "train_path": "../Data/Option 1/Train",
+  "use_depthwise_separable": false,
+  "use_fixed_class_weights": true,
+  "use_masking": false,
+  "use_max_pooling": true,
+  "use_residual": true,
+  "weight_decay": 0.005,
+  "num_classes": 3,
+  "num_input_channels": 2,
+  "receptive_field": 187
+}
