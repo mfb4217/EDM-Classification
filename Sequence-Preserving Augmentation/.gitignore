@@ -1,0 +1,13 @@
+# Ignore generated data and visual artifacts
+Augmented Data/
+visualizations/
+visualizations_with_sources/
+viz_new/
+*_metadata.json
+*.csv
+*.png
+*.jpg
+*.jpeg
+*.gif
+__pycache__/
+*.log
