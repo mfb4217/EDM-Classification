@@ -2,28 +2,20 @@
 Training Module
 Train ensemble of models for status classification
 """
-import sys
 import os
 import numpy as np
 import joblib
-
-# Add parent directories to path
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent_dir, 'Status Classification'))
-
-from config import Config
+from config import dict_to_config
 from preprocessing import DataPreprocessor
-from run_ensemble import create_config
+from utils import create_config
 from inference import save_preprocessor
 
 # We need to wrap run_single_model to also return preprocessor
 def run_single_model_with_preprocessor(config, exp_id):
     """Wrapper around run_single_model that also returns preprocessor"""
-    from run_ensemble import run_single_model as original_run_single_model
     from train import Trainer
     
     # Replicate the logic from run_ensemble.py but capture preprocessor
-    import os
     from tqdm import tqdm
     import torch
     from sklearn.metrics import accuracy_score, precision_recall_fscore_support, roc_auc_score
@@ -34,6 +26,10 @@ def run_single_model_with_preprocessor(config, exp_id):
         config.model_dir = experiment_dir  # Save directly in model directory
         config.results_dir = experiment_dir
         config.logs_dir = None  # Not used - don't create logs directory
+        
+        # Verify paths are set
+        if config.train_path is None:
+            raise ValueError(f"config.train_path is None for experiment {config.experiment_name}")
         
         os.makedirs(experiment_dir, exist_ok=True)
         
@@ -122,11 +118,12 @@ def create_validation_split(config_dict):
     print("="*80)
     
     # Create config without augmented data for split creation
-    base_config = _create_config_from_dict(config_dict).__dict__
-    base_config['augmented_data_path'] = None
-    base_config['experiment_name'] = 'ensemble_split'
+    base_config_dict = config_dict.copy()
+    base_config_dict['data_paths'] = config_dict['data_paths'].copy()
+    base_config_dict['data_paths']['augmented_data_path'] = None
+    base_config_dict['experiment_name'] = 'ensemble_split'
     
-    split_config = create_config(base_config)
+    split_config = dict_to_config(base_config_dict)
     split_preprocessor = DataPreprocessor(split_config)
     split_preprocessor.preprocess_train(split_config.train_path)
     
@@ -162,8 +159,8 @@ def train_ensemble(config_dict, predefined_split):
     model_seeds = ensemble_config['model_seeds']
     
     # Create base config
-    base_config = _create_config_from_dict(config_dict).__dict__
-    base_config['predefined_split'] = predefined_split
+    base_config = dict_to_config(config_dict)
+    base_config.predefined_split = predefined_split
     
     all_results = []
     all_probabilities = []
@@ -172,11 +169,11 @@ def train_ensemble(config_dict, predefined_split):
     preprocessor_saved = False
     
     for run_id in range(1, num_models + 1):
-        config = create_config(
-            base_config,
-            experiment_name=f"{config_dict['experiment_name']}_model_{run_id:02d}",
-            seed=model_seeds[run_id - 1] if run_id <= len(model_seeds) else config_dict['seed'] + run_id
-        )
+        # Create a new config object with updated experiment name and seed
+        config = dict_to_config(config_dict)
+        config.experiment_name = f"{config_dict['experiment_name']}_model_{run_id:02d}"
+        config.seed = model_seeds[run_id - 1] if run_id <= len(model_seeds) else config_dict['seed'] + run_id
+        config.predefined_split = predefined_split  # Ensure split is preserved
         
         result = run_single_model_with_preprocessor(config, run_id)
         
@@ -224,73 +221,4 @@ def train_ensemble(config_dict, predefined_split):
     return all_results, ensemble_probs, labels, class_names
 
 
-def _create_config_from_dict(config_dict):
-    """Helper function to create Config from dictionary"""
-    config = Config()
-    
-    # Basic settings
-    config.experiment_name = config_dict.get('experiment_name', 'experiment')
-    config.seed = config_dict.get('seed', 42)
-    
-    # Data paths
-    data_paths = config_dict.get('data_paths', {})
-    config.train_path = data_paths.get('train_path')
-    config.test_path = data_paths.get('test_path')
-    config.augmented_data_path = data_paths.get('augmented_data_path')
-    config.exclude_files_csv = data_paths.get('exclude_files_csv')
-    config.data_path = os.path.dirname(data_paths.get('train_path', ''))
-    if 'option2_train_path' in data_paths:
-        config.option2_train_path = data_paths['option2_train_path']
-    if 'option2_test_path' in data_paths:
-        config.option2_test_path = data_paths['option2_test_path']
-    
-    # Preprocessing
-    preprocessing = config_dict.get('preprocessing', {})
-    config.max_series_length = preprocessing.get('max_series_length', 10000)
-    config.normalize = preprocessing.get('normalize', True)
-    config.include_derivatives = preprocessing.get('include_derivatives', False)
-    config.validation_split = preprocessing.get('validation_split', 0.2)
-    
-    # Model architecture
-    arch = config_dict.get('model_architecture', {})
-    config.channels = arch.get('channels', [64, 128, 256, 512, 512])
-    config.dilations = arch.get('dilations', [1, 2, 4, 8, 16])
-    config.strides = arch.get('strides', [2, 2, 2, 2, 1])
-    config.kernel_size = arch.get('kernel_size', 7)
-    config.dropout = arch.get('dropout', 0.3)
-    config.use_depthwise_separable = arch.get('use_depthwise_separable', False)
-    config.use_residual = arch.get('use_residual', True)
-    config.activation = arch.get('activation', 'swish')
-    config.use_max_pooling = arch.get('use_max_pooling', True)
-    config.dense_hidden_ratio = arch.get('dense_hidden_ratio', 1.0)
-    config.dense_hidden_min = arch.get('dense_hidden_min', 256)
-    
-    # Training
-    training = config_dict.get('training', {})
-    config.num_epochs = training.get('num_epochs', 300)
-    config.batch_size = training.get('batch_size', 64)
-    config.learning_rate = training.get('learning_rate', 0.0005)
-    config.weight_decay = training.get('weight_decay', 0.004)
-    config.early_stopping_patience = training.get('early_stopping_patience', 25)
-    config.early_stopping_metric = training.get('early_stopping_metric', 'val_loss')
-    config.scheduler_factor = training.get('scheduler_factor', 0.5)
-    config.scheduler_patience = training.get('scheduler_patience', 5)
-    config.use_fixed_class_weights = training.get('use_fixed_class_weights', True)
-    if 'fixed_class_distribution' in training:
-        config.fixed_class_distribution = training['fixed_class_distribution']
-    config.add_noise = training.get('add_noise', True)
-    config.noise_std = training.get('noise_std', 0.08)
-    config.use_masking = training.get('use_masking', False)
-    
-    # Output paths
-    output_paths = config_dict.get('output_paths', {})
-    config.model_dir = output_paths.get('models_dir', 'models')
-    config.results_dir = output_paths.get('results_dir', 'results')
-    config.logs_dir = output_paths.get('logs_dir', 'logs')
-    
-    # Status mapping
-    config.status_mapping = {"Normal": 0, "NPT": 1, "OD": 2}
-    config.num_classes = 3
-    
-    return config
 

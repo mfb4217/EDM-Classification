@@ -2,21 +2,14 @@
 Inference Module
 Make predictions on a single drill using trained ensemble
 """
-import sys
 import os
 import torch
 import numpy as np
 import pandas as pd
 import joblib
-
-# Add parent directories to path
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent_dir, 'Status Classification'))
-
 from config import Config
 from preprocessing import DataPreprocessor
-from evaluate_runtime import preprocess_single_drill, predict_ensemble_production
-from run_ensemble import apply_thresholds
+from utils import preprocess_single_drill, predict_ensemble_production, apply_thresholds
 from thresholds import load_thresholds, apply_thresholds_selective
 
 
@@ -173,47 +166,5 @@ def predict_single_drill(csv_file_path, models, preprocessor, thresholds, device
 
 def _create_config_from_dict(config_dict):
     """Helper function to create Config from dictionary"""
-    from config import Config
-    
-    config = Config()
-    
-    # Basic settings
-    config.experiment_name = config_dict.get('experiment_name', 'experiment')
-    config.seed = config_dict.get('seed', 42)
-    
-    # Data paths
-    data_paths = config_dict.get('data_paths', {})
-    config.train_path = data_paths.get('train_path')
-    config.test_path = data_paths.get('test_path')
-    config.augmented_data_path = data_paths.get('augmented_data_path')
-    config.exclude_files_csv = data_paths.get('exclude_files_csv')
-    config.data_path = os.path.dirname(data_paths.get('train_path', ''))
-    if 'option2_train_path' in data_paths:
-        config.option2_train_path = data_paths['option2_train_path']
-    
-    # Preprocessing
-    preprocessing = config_dict.get('preprocessing', {})
-    config.max_series_length = preprocessing.get('max_series_length', 10000)
-    config.normalize = preprocessing.get('normalize', True)
-    config.include_derivatives = preprocessing.get('include_derivatives', False)
-    config.validation_split = preprocessing.get('validation_split', 0.2)
-    
-    # Model architecture
-    arch = config_dict.get('model_architecture', {})
-    config.channels = arch.get('channels', [64, 128, 256, 512, 512])
-    config.dilations = arch.get('dilations', [1, 2, 4, 8, 16])
-    config.strides = arch.get('strides', [2, 2, 2, 2, 1])
-    config.kernel_size = arch.get('kernel_size', 7)
-    config.dropout = arch.get('dropout', 0.3)
-    config.use_depthwise_separable = arch.get('use_depthwise_separable', False)
-    config.use_residual = arch.get('use_residual', True)
-    config.activation = arch.get('activation', 'swish')
-    config.use_max_pooling = arch.get('use_max_pooling', True)
-    config.dense_hidden_ratio = arch.get('dense_hidden_ratio', 1.0)
-    config.dense_hidden_min = arch.get('dense_hidden_min', 256)
-    
-    # Status mapping
-    config.status_mapping = {"Normal": 0, "NPT": 1, "OD": 2}
-    config.num_classes = 3
-    
-    return config
+    from config import dict_to_config
+    return dict_to_config(config_dict)

@@ -57,8 +57,8 @@ Required packages:
 - psutil >= 5.9.0 (optional, for RAM measurements in runtime evaluation)
 
 The pipeline imports modules from:
-- `../Status Classification/` - Core classification modules (config, preprocessing, model, train, run_ensemble)
-- `../Sequence-Preserving Augmentation/` - Data augmentation module
+- All modules are self-contained within the `FINAL/` folder
+- No dependencies on external folders
 
 ## Usage
 

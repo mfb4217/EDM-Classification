@@ -21,6 +21,7 @@ except ImportError:
     print("Warning: psutil not available. Memory measurements will be limited.")
 
 from inference import load_ensemble_models, predict_single_drill
+from utils import preprocess_single_drill, predict_ensemble_production
 
 
 def get_dir_size(path):
@@ -281,34 +282,6 @@ def evaluate_runtime(config_dict, all_results, thresholds):
 
 def _create_config_from_dict(config_dict):
     """Helper function to create Config from dictionary"""
-    from config import Config
-    
-    config = Config()
-    
-    # Basic settings
-    config.experiment_name = config_dict.get('experiment_name', 'experiment')
-    config.seed = config_dict.get('seed', 42)
-    
-    # Data paths
-    data_paths = config_dict.get('data_paths', {})
-    config.train_path = data_paths.get('train_path')
-    config.test_path = data_paths.get('test_path')
-    config.augmented_data_path = data_paths.get('augmented_data_path')
-    config.exclude_files_csv = data_paths.get('exclude_files_csv')
-    config.data_path = os.path.dirname(data_paths.get('train_path', ''))
-    if 'option2_train_path' in data_paths:
-        config.option2_train_path = data_paths['option2_train_path']
-    
-    # Preprocessing
-    preprocessing = config_dict.get('preprocessing', {})
-    config.max_series_length = preprocessing.get('max_series_length', 10000)
-    config.normalize = preprocessing.get('normalize', True)
-    config.include_derivatives = preprocessing.get('include_derivatives', False)
-    config.validation_split = preprocessing.get('validation_split', 0.2)
-    
-    # Status mapping
-    config.status_mapping = {"Normal": 0, "NPT": 1, "OD": 2}
-    config.num_classes = 3
-    
-    return config
+    from config import dict_to_config
+    return dict_to_config(config_dict)
 

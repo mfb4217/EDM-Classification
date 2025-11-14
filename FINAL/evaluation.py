@@ -2,15 +2,8 @@
 Evaluation Module
 Evaluate ensemble on test set with optimized thresholds
 """
-import sys
-import os
 import numpy as np
-
-# Add parent directories to path
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent_dir, 'Status Classification'))
-
-from run_ensemble import evaluate_with_thresholds, check_constraints, compute_class_rates
+from utils import evaluate_with_thresholds, check_constraints, compute_class_rates
 from thresholds import apply_thresholds_selective
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score
 

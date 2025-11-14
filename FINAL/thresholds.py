@@ -2,17 +2,10 @@
 Threshold Optimization Module
 Optimize per-class probability thresholds on validation set
 """
-import sys
-import os
 import numpy as np
 from itertools import product
 from sklearn.metrics import accuracy_score, confusion_matrix
-
-# Add parent directories to path
-parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(os.path.join(parent_dir, 'Status Classification'))
-
-from run_ensemble import apply_thresholds, compute_class_rates, check_constraints
+from utils import apply_thresholds, compute_class_rates, check_constraints
 
 # Default limits
 FPR_LIMITS = {'Normal': 0.15, 'NPT': 0.05, 'OD': 0.05}
