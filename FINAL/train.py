@@ -117,7 +117,10 @@ class Trainer:
             fixed_dist = getattr(config, 'fixed_class_distribution', {})
             class_counts = np.array([fixed_dist[name] for name in class_names])
         else:
-            class_counts = np.array([stats_train[name]['count'] for name in class_names])
+            # Use original stats (before augmentation) for class weights
+            # This prevents distortion from augmented data distribution
+            original_stats = getattr(self.preprocessor, 'original_stats', stats_train)
+            class_counts = np.array([original_stats[name]['count'] for name in class_names])
         
         total = class_counts.sum()
         class_weights = torch.FloatTensor(total / (len(class_counts) * class_counts))
@@ -241,9 +244,8 @@ class Trainer:
             
             print()
         
-        self.save_model(is_best=False)
-        self.save_history()
-        print(f"\nTraining completed!")
+        # Don't save final model or history (only best model is saved)
+        print(f"\nTraining completed! Best model already saved.")
     
     def _evaluate_loader(self, loader):
         self.model.eval()
@@ -274,15 +276,16 @@ class Trainer:
         return self._evaluate_loader(self.train_eval_loader)
     
     def save_model(self, is_best=True):
-        suffix = 'best' if is_best else 'final'
-        path = os.path.join(self.config.model_dir, f"{self.config.experiment_name}_{suffix}_model.pth")
-        torch.save(self.model.state_dict(), path)
+        if is_best:
+            # Only save best model (rename to just 'best_model.pth' for simplicity)
+            path = os.path.join(self.config.model_dir, "best_model.pth")
+            torch.save(self.model.state_dict(), path)
+        # Don't save final model (only best is needed)
     
     def save_history(self):
-        path = os.path.join(self.config.results_dir, f"{self.config.experiment_name}_history.json")
-        with open(path, 'w') as f:
-            json.dump(self.history, f, indent=2)
-        print(f"History saved to {path}")
+        # Don't save history to reduce clutter
+        # History is only used during training for early stopping
+        pass
 
 if __name__ == "__main__":
     config = Config()
