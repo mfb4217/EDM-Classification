@@ -1,0 +1,102 @@
+{
+  "experiment_name": "final_ensemble",
+  "seed": 42,
+  
+  "data_paths": {
+    "train_path": "../Data/Option 1/Train",
+    "test_path": "../Data/Option 1/Test",
+    "augmented_data_path": "../Augmented Data",
+    "option2_train_path": "../Data/Option 2/Train",
+    "exclude_files_csv": "../Data/files_to_remove_due_to_double_drill_error.csv"
+  },
+  
+  "data_augmentation": {
+    "enabled": true,
+    "target_counts": {
+      "Normal": 93,
+      "NPT": 171,
+      "OD": 164
+    }
+  },
+  
+  "preprocessing": {
+    "max_series_length": 10000,
+    "normalize": true,
+    "include_derivatives": false,
+    "validation_split": 0.2
+  },
+  
+  "model_architecture": {
+    "channels": [64, 128, 256, 512, 512],
+    "dilations": [1, 2, 4, 8, 16],
+    "strides": [2, 2, 2, 2, 1],
+    "kernel_size": 7,
+    "dropout": 0.3,
+    "use_depthwise_separable": false,
+    "use_residual": true,
+    "activation": "swish",
+    "use_max_pooling": true,
+    "dense_hidden_ratio": 1.0,
+    "dense_hidden_min": 256
+  },
+  
+  "training": {
+    "num_epochs": 300,
+    "batch_size": 64,
+    "learning_rate": 0.0005,
+    "weight_decay": 0.004,
+    "early_stopping_patience": 25,
+    "early_stopping_metric": "val_loss",
+    "scheduler_factor": 0.5,
+    "scheduler_patience": 5,
+    "use_fixed_class_weights": true,
+    "fixed_class_distribution": {
+      "Normal": 220,
+      "NPT": 66,
+      "OD": 75
+    },
+    "add_noise": true,
+    "noise_std": 0.08,
+    "use_masking": false
+  },
+  
+  "ensemble": {
+    "num_models": 5,
+    "model_seeds": [43, 44, 45, 46, 47]
+  },
+  
+  "threshold_optimization": {
+    "optimize_only_npt": true,
+    "fpr_limits": {
+      "Normal": 0.15,
+      "NPT": 0.05,
+      "OD": 0.05
+    },
+    "fnr_limits": {
+      "Normal": 0.10,
+      "NPT": 0.30,
+      "OD": 0.20
+    },
+    "min_accuracy": 0.90,
+    "threshold_grid_start": 0,
+    "threshold_grid_end": 0.95,
+    "threshold_grid_steps": 36
+  },
+  
+  "runtime_evaluation": {
+    "hardware_constraints": {
+      "cpu_only": true,
+      "num_threads": 4,
+      "ram_gb": 8,
+      "storage_gb": 120
+    },
+    "num_samples": 100
+  },
+  
+  "output_paths": {
+    "results_dir": "results",
+    "models_dir": "models",
+    "logs_dir": "logs"
+  }
+}
+
