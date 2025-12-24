@@ -1,0 +1,68 @@
+{
+  "experiment_name": "custom_foundational",
+  "seed": 42,
+  
+  "data_paths": {
+    "unlabeled_data_path": "Unlabeled"
+  },
+  
+  "preprocessing": {
+    "max_series_length": 5000,
+    "normalize": true,
+    "include_derivatives": false,
+    "apply_max_pooling": true,
+    "max_pooling_kernel_size": 2,
+    "validation_split": 0.2
+  },
+  
+  "model_architecture": {
+    "channels": [64, 128, 256, 512, 512],
+    "dilations": [1, 2, 4, 8, 16],
+    "strides": [2, 2, 2, 2, 1],
+    "kernel_size": 7,
+    "dropout": 0.3,
+    "use_depthwise_separable": false,
+    "use_residual": true,
+    "activation": "swish",
+    "use_max_pooling": true,
+    "embedding_dim": 256
+  },
+  
+  "training": {
+    "num_epochs": 100,
+    "batch_size": 16,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "early_stopping_patience": 20,
+    "early_stopping_metric": "val_loss",
+    "scheduler_factor": 0.5,
+    "scheduler_patience": 5,
+    "save_every": 20
+  },
+  
+  "contrastive_loss": {
+    "alpha": 0.5,
+    "temporal_unit": 0,
+    "temporal_stride": 4,
+    "use_softclt": true,
+    "soft_temporal": true,
+    "soft_instance": false,
+    "tau_temp": 2.0,
+    "lambda_": 0.5,
+    "dist_type": "euclidean"
+  },
+  
+  "data_augmentation": {
+    "add_noise": true,
+    "noise_std": 0.08,
+    "random_crop": true,
+    "crop_min_length": 1000,
+    "crop_max_length": 5000
+  },
+  
+  "output_paths": {
+    "model_dir": "custom_foundational_models",
+    "results_dir": "custom_foundational_results"
+  }
+}
+
